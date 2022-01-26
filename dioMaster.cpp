@@ -18,6 +18,8 @@
 
 using namespace std;
 
+Registers_t registers;
+
 #define GPIO_ADDR 0xE8000000 //IO starts at 4
 
 #define DIGIO_IN		0x4 / (sizeof(uint32_t))
@@ -44,7 +46,7 @@ static bool init{false};
 mutex dioMaster_lock;
 
 int8_t BitSet(uint8_t pin_num, bool val, uint8_t reg) {
-	// debug( "PIN %i, set: %i\n", pin_num, val);
+	// //debug( "PIN %i, set: %i\n", pin_num, val);
 	uint8_t offset = pin_num - 1; // pin numbers off by 1
 	lock_guard<mutex> lock(dioMaster_lock); // Turn on the lock
 	// Update the relevant output bit
@@ -56,20 +58,20 @@ int8_t BitSet(uint8_t pin_num, bool val, uint8_t reg) {
 int8_t BitRead(uint8_t pin_num, uint8_t reg) {
 	lock_guard<mutex> lock(dioMaster_lock); // Turn on the lock
 	uint32_t value = ioAddress32[reg];
-	// debug( "PIN %i, read: %i\n", pin_num, value & (1 << (pin_num-1)));
+	// //debug( "PIN %i, read: %i\n", pin_num, value & (1 << (pin_num-1)));
 	if (value & (1 << (pin_num-1))) return 1;
     else return 0;
 }
 
 bool CheckPin(uint8_t pin_num, uint8_t min, uint8_t max) {
 	if ( (pin_num < min) || (pin_num > max)) {
-		debug("Pin number should be in [%hhu,%hhu], but requested %hhu\n", min, max, pin_num);
+		//debug("Pin number should be in [%hhu,%hhu], but requested %hhu\n", min, max, pin_num);
 		return false;
 	}
 	return true;
 }
 
-// for manipulation of the registers on the DIO header
+// for manipulation of the  on the DIO header
 int8_t DIO_DataSet(uint8_t pin_num, bool val) {
 	// ensure valid input
 	if (!CheckPin(pin_num, DIO_MINPIN, DIO_MAXPIN)) return -1;
@@ -112,7 +114,7 @@ int8_t PC104C_Read(uint8_t pin_num){
 int8_t DIOMaster_Setup(){
 	int mem = open("/dev/mem", O_RDWR|O_SYNC);
 	if (mem < 0) {
-        debug("DIOMaster failed to open /dev/mem with : %s\n",strerror(errno));
+        //debug("DIOMaster failed to open /dev/mem with : %s\n",strerror(errno));
         return -1;
     }
 
@@ -120,7 +122,7 @@ int8_t DIOMaster_Setup(){
     //  constants declared in computer board manual 7.3.2
 	ioAddress32 = (volatile uint32_t*) mmap(0, getpagesize(), PROT_READ|PROT_WRITE, MAP_SHARED, mem, GPIO_ADDR);
 	if (ioAddress32 == nullptr) {
-		debug("MMap Failed\n");
+		//debug("MMap Failed\n");
 		return -1;
 	}
     // Set the PC104 C and D row MUX to GPIO.  // Write 0 to first 19 bits
@@ -141,7 +143,7 @@ void SplitPinAndReg(uint16_t &pin_num, uint16_t &reg) {
 
 int8_t DIOMaster_DataSet(uint16_t pin_num, bool val) {
 	if (!init) {
-        debug("DIO not setup\n");
+        //debug("DIO not setup\n");
         return -1;
     }
     uint16_t reg;
@@ -157,15 +159,15 @@ int8_t DIOMaster_DataSet(uint16_t pin_num, bool val) {
 			break;
 		}
 	}
-	debug("WRONG SHIT TO DIO MASTER DATASET\n");
-	debug("set\n");
-	debug("pinnum\t%x\n", pin_num);
+	//debug("WRONG SHIT TO DIO MASTER DATASET\n");
+	//debug("set\n");
+	//debug("pinnum\t%x\n", pin_num);
 	return -1;
 }
 
 int8_t DIOMaster_DirSet(uint16_t pin_num, bool val) {
 	if (!init) {
-        debug("DIO not setup\n");
+        //debug("DIO not setup\n");
         return -1;
     }
     uint16_t reg;
@@ -182,9 +184,9 @@ int8_t DIOMaster_DirSet(uint16_t pin_num, bool val) {
 			break;
 		}
 	}
-	debug("WRONG SHIT TO DIO MASTER DIRSET\n");
-	debug("dir\n");
-	debug("pinnum\t%x\n", pin_num);
+	//debug("WRONG SHIT TO DIO MASTER DIRSET\n");
+	//debug("dir\n");
+	//debug("pinnum\t%x\n", pin_num);
 	return -1;
 }
 
@@ -202,9 +204,9 @@ int8_t DIOMaster_Read(uint16_t pin_num) {
 			break;
 		}
 	}
-	debug("read\n");
-	debug("pinnum\t%x\n", pin_num);
-	debug("WRONG SHIT TO DIO MASTER\n");
+	//debug("read\n");
+	//debug("pinnum\t%x\n", pin_num);
+	//debug("WRONG SHIT TO DIO MASTER\n");
 	return -1;
 }
 
@@ -226,20 +228,20 @@ void toggleEStop() {
 #ifdef BAG2_FW
 		if (!DIOMaster_Read(DIO_EStopStatus)) { //
 			DIOMaster_DataSet(DIO_EStop, 1);
-			debug("ESTOP ON\n");
+			//debug("ESTOP ON\n");
 		}
 		else {
 			DIOMaster_DataSet(DIO_EStop, 0);
-			debug("ESTOP OFF\n");
+			//debug("ESTOP OFF\n");
 		}
 #else
 		if (DIOMaster_Read(DIO_EStop)) { //
 			DIOMaster_DataSet(DIO_EStop, 0);
-			debug("ESTOP ON\n");
+			//debug("ESTOP ON\n");
 		}
 		else {
 			DIOMaster_DirSet(DIO_EStop, 0);  // Need to set to input.  Statically high, then we can read if button is pushed
-			debug("ESTOP OFF\n");
+			//debug("ESTOP OFF\n");
 		}
 #endif
 }
