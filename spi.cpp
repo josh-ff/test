@@ -21,8 +21,8 @@ SPI::SPI() {
 
 void SPI::transfer(uint8_t * txBuff, uint8_t * rxBuff, int len)
 {
-	//struct spi_ioc_transfer	xfer[2];
-	struct spi_ioc_transfer	xfer[1];
+	struct spi_ioc_transfer	xfer[2];
+	// struct spi_ioc_transfer	xfer[1];
 	int			status;
 
 	memset(xfer, 0, sizeof xfer);
@@ -31,9 +31,9 @@ void SPI::transfer(uint8_t * txBuff, uint8_t * rxBuff, int len)
 	xfer[0].len = len;
 	
 
-	xfer[0].rx_buf = (unsigned long) rxBuff;
-	//xfer[1].rx_buf = (unsigned long) txBuff;
-	//xfer[1].len = len;
+	// xfer[0].rx_buf = (unsigned long) rxBuff;
+	xfer[1].rx_buf = (unsigned long) txBuff;
+	xfer[1].len = len;
 
 	status = ioctl(file_, SPI_IOC_MESSAGE(1), xfer);
 	if (status < 0) {

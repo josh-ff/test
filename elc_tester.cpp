@@ -18,7 +18,7 @@
 using namespace std;
 
 //const int CS_PIN = 8;
-const int SYNC_PIN = 4;
+const int SYNC_PIN = 5;
 
 int main(int argc, char * argv[]){
 	//For sleep
@@ -47,6 +47,8 @@ int main(int argc, char * argv[]){
 	
 	DIOMaster_DirSet(SYNC_PIN , 1);
 	DIOMaster_DataSet(SYNC_PIN  , 1);	//Set CS HIGH
+
+
 	auto spi = SPI();
 	auto ad7195 = AD7195(spi, 1);
 	(void) dio_status;
