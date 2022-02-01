@@ -53,7 +53,11 @@ int main(int argc, char * argv[]){
 	auto spi = SPI();
 	auto ad7195 = AD7195(spi, 1);
 
+	// here is where we will loop through ELCs
 	auto mux_interface = Mux_74HC137();
+
+	// for now we will just make it transparent to ELC Amp 0
+	mux_interface.set_addr(1);
 
 	/* AD7195 Init Begin*/
 

@@ -19,7 +19,7 @@ void InitializeIO(){
 //DIO3 LC_SYNC,  CPU Bank 1, 19
 
 
-void SetPin(int pin, int bank, uint val){//SPI is bank 2
+void SetPin(int pin, int bank, unsigned int val){//SPI is bank 2
     auto muxpin = pin;
     auto reg = 0;
     if(pin > 15) {

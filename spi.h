@@ -31,7 +31,7 @@ class SPI {
 		unsigned char buf[32], *bp;
 		//int len, status;
 		int status;
-		const char *filename = "/dev/spidev32766.0";
+		const char *filename = "/dev/spidev0.0";
 
 		//Spi Settings
 		uint32_t speed;

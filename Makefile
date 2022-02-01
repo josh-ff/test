@@ -4,7 +4,7 @@ VERSION=0x03
 
 ELC_DEBUG=elc-debug
 
-ELC_SRC_FILES =gpio.cpp spi.cpp AD7195.cpp LoadCellManager.cpp elc_tester.cpp
+ELC_SRC_FILES =gpio.cpp spi.cpp AD7195.cpp LoadCellManager.cpp elc_tester.cpp 74HC137.cpp
 
 
 BAG2_SRC_FILES += $(wildcard openmv/src/*.cpp) $(filter-out openmv/openmvrpc_test.cpp, $(wildcard openmv/*.cpp)) $(SENSOR_FILES)
