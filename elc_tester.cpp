@@ -19,7 +19,7 @@
 using namespace std;
 
 //const int CS_PIN = 8;
-const int SYNC_PIN = 5;
+const int SYNC_PIN = 0x13;
 
 int main(int argc, char * argv[]){
 	//For sleep
@@ -59,7 +59,7 @@ int main(int argc, char * argv[]){
 	// for now we will just make it transparent to ELC Amp 0
 	mux_interface.set_addr(1);
 
-	/* AD7195 Init Begin*/
+	// /* AD7195 Init Begin*/
 
 	bool elcOnline = ad7195.init();
 	printf("Initialize AD7195 %s\n",elcOnline  ? "Succeeded" : "Failed");

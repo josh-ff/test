@@ -16,9 +16,9 @@ public:
 
 private:
   // pin mappings to SBC frame: https://docs.embeddedts.com/TS-7400-V2#DIO
-  int MUX_A0 = 0x01;
-  int MUX_A1 = 0x03;
-  int MUX_A2 = 0x04;
+  int MUX_A0 = 0x10;
+  int MUX_A1 = 0x11;
+  int MUX_A2 = 0x12;
   std::vector<int> PINS = {MUX_A0, MUX_A1, MUX_A2};
 };
 
