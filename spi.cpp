@@ -12,36 +12,32 @@ SPI::SPI() {
         return;
 	}
 
-
-
-	//memset(xfer, 0, sizeof xfer);
-	//memset(buf, 0, sizeof buf);
-	//len = sizeof buf;
 }
 
-void SPI::transfer(uint8_t * txBuff, uint8_t * rxBuff, int len)
-{
-	struct spi_ioc_transfer	xfer[2];
-	// struct spi_ioc_transfer	xfer[1];
-	int			status;
+// read and write in 2 spi frames
+void SPI::transfer(uint8_t * txBuff, uint8_t * rxBuff, int len){
+	struct spi_ioc_transfer xfer[2];
 
-	memset(xfer, 0, sizeof xfer);
+    memset(xfer, 0, sizeof xfer);
 
-	xfer[0].tx_buf = (unsigned long)txBuff;
-	xfer[0].len = len;
-	
+    xfer[0].tx_buf = (unsigned long)txBuff;
+    xfer[0].len = len;
 
-	// xfer[0].rx_buf = (unsigned long) rxBuff;
-	xfer[1].rx_buf = (unsigned long) txBuff;
-	xfer[1].len = len;
-
-	status = ioctl(file_, SPI_IOC_MESSAGE(1), xfer);
+    xfer[1].rx_buf = (unsigned long) rxBuff;
+    xfer[1].len = 6;
+	int status = ioctl(file_, SPI_IOC_MESSAGE(2), xfer);
+    printf("TX: %02X -> ", txBuff[0]);
+    for(auto x = 0; x < 6; x++){
+        printf("%02X ", rxBuff[x]);
+    }
+    printf("\n");
 	if (status < 0) {
-		perror("SPI_IOC_MESSAGE");
+		perror("SPI READ FAIL");
 		return;
 	}
 }
 
+// pure write
 void SPI::transfer(uint8_t * txBuff, int len)
 {
 	//struct spi_ioc_transfer	xfer[2];
@@ -60,8 +56,7 @@ void SPI::transfer(uint8_t * txBuff, int len)
 
 	status = ioctl(file_, SPI_IOC_MESSAGE(1), xfer);
 	if (status < 0) {
-		perror("SPI_IOC_MESSAGE");
-		return;
+		perror("SPI TX FAIL");
 	}
 }
 
@@ -105,6 +100,7 @@ void SPI::settings(uint32_t spiMode, uint32_t clkSpeedHz)
 		perror("Error Setting SPI Clock Frequency");
 		return;
 	}
+    //return;
 	printf("SPI Settings Configured:\n-> ");
 	this->begin_transaction();
 }
