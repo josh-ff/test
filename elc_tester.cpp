@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "spi.h"
 #include "AD7195.h"
-#include "dioMaster.h"
+#include "gpio.h"
 #include "registers.h"
 #include <cstring>
 //#include <unistd.h>
@@ -14,6 +14,7 @@
 #include <fstream>
 #include <string>
 #include <iomanip>
+#include "74HC137.h"
 
 using namespace std;
 
@@ -43,15 +44,16 @@ int main(int argc, char * argv[]){
 	dataFile.open(fname);
 
 	printf("\r\n---Starting Test Script---\n");
-	auto dio_status = DIOMaster_Setup();	
-	
-	DIOMaster_DirSet(SYNC_PIN , 1);
-	DIOMaster_DataSet(SYNC_PIN  , 1);	//Set CS HIGH
+	// auto dio_status = DIOMaster_Setup();	
+	InitializeIO();
+	// DIOMaster_DirSet(SYNC_PIN , 1);
+	SetPin(SYNC_PIN,1, 1);	//Set CS HIGH
 
 
 	auto spi = SPI();
 	auto ad7195 = AD7195(spi, 1);
-	(void) dio_status;
+
+	auto mux_interface = Mux_74HC137();
 
 	/* AD7195 Init Begin*/
 
