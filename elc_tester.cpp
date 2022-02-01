@@ -26,7 +26,7 @@ int main(int argc, char * argv[]){
 	uint32_t numSamples = 500;
 	uint16_t sampleSpeed = 0x08;
 	uint8_t delayTime = 2;
-	std::ofstream dataFile;
+	FILE* dataFile;
 	std::string fname;
 	if(argc <= 1)
 	{
@@ -41,7 +41,9 @@ int main(int argc, char * argv[]){
 		sampleSpeed = stoi(argv[3]);
 	}
 	fname = std::string(argv[1]);
-	dataFile.open(fname);
+	// dataFile.open(fname); TODO: josh make work
+	dataFile = fopen(fname.c_str(), "w");
+
 
 	printf("\r\n---Starting Test Script---\n");
 	// auto dio_status = DIOMaster_Setup();	
@@ -76,7 +78,7 @@ int main(int argc, char * argv[]){
 	 ad7195.setConversionFactor(0.002, 20000.0);
 
 	printf("Single Channel SamplingPeriod [%d us]", ad7195.getSamplingPeriodUs());
-	dataFile << "Single Channel SamplingPeriod, " << ad7195.getSamplingPeriodUs() << ",us" << std::endl;
+	// dataFile << "Single Channel SamplingPeriod, " << ad7195.getSamplingPeriodUs() << ",us" << std::endl;
 
 	LoadCellManager loadcellmanager(ad7195);
 	/* AD7195 Init End*/
@@ -96,7 +98,7 @@ int main(int argc, char * argv[]){
 	loadcellmanager.begin_polling();
 	auto startTime = std::chrono::high_resolution_clock::now();
 
-	dataFile << "Tare: " << loadcellmanager.getTareVal() << "g" << std::endl;
+	// dataFile << "Tare: " << loadcellmanager.getTareVal() << "g" << std::endl;
 
 	for(int i=0; i<(int)numSamples; i++)
 	{
@@ -105,8 +107,8 @@ int main(int argc, char * argv[]){
 			//Block until there's new data
 		}
 		double readVal = loadcellmanager.read();
-		//printf("[%2d]Load Value: %0.8F\n", i, loadcellmanager.read());
-		dataFile << i << "," << std::fixed << std::setw( 7 ) << std::setprecision( 1 ) << std::setfill( '0' ) <<readVal << std::endl;
+		fprintf(dataFile, "%d, %0.2F\n", i, readVal);
+		// dataFile << i << "," << std::setprecision( 1 ) <<readVal << std::endl;
 
 	}
 	auto finishTime = std::chrono::high_resolution_clock::now();
@@ -114,13 +116,14 @@ int main(int argc, char * argv[]){
 	double sampleFreq = (numSamples/microseconds)*1000000;
 	printf("Disabling Load Cell Amp\n");
 	printf("Effective Polling Frequency: %0.8F hz\n", sampleFreq);
-	dataFile << "Measured Freq, " << std::setw( 7 ) << std::setprecision( 1 ) << std::setfill( '0' ) << sampleFreq << " Hz" << std::endl; 
+	// dataFile << "Measured Freq, " << std::setprecision( 1 )<< sampleFreq << " Hz" << std::endl; 
 	loadcellmanager.end_polling(true); //Blocking end polling
 
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
 	
 	printf("\r\n---Ending Test Script---\n");
-	dataFile.close();
+	// dataFile.close();
+	fclose(dataFile);
 	printf("Data Saved to: %s\n", fname.c_str());
 	return 0;
 }

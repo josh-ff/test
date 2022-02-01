@@ -15,22 +15,22 @@ SPI::SPI() {
 }
 
 // read and write in 2 spi frames
-void SPI::transfer(uint8_t * txBuff, uint8_t * rxBuff, int len){
+void SPI::transfer(uint8_t * txBuff, uint8_t * rxBuff, int len, int w_len){
 	struct spi_ioc_transfer xfer[2];
 
     memset(xfer, 0, sizeof xfer);
 
     xfer[0].tx_buf = (unsigned long)txBuff;
-    xfer[0].len = len;
+    xfer[0].len = w_len;
 
-    xfer[1].rx_buf = (unsigned long) rxBuff;
-    xfer[1].len = 6;
+    xfer[1].rx_buf = (unsigned long) rxBuff + w_len;
+    xfer[1].len = len;
 	int status = ioctl(file_, SPI_IOC_MESSAGE(2), xfer);
-    printf("TX: %02X -> ", txBuff[0]);
-    for(auto x = 0; x < 6; x++){
-        printf("%02X ", rxBuff[x]);
+    // printf("TX: %02X -> ", txBuff[0]);
+    for(auto x = 0; x < len; x++){
+        // printf("%02X ", rxBuff[x]);
     }
-    printf("\n");
+    // printf("\n");
 	if (status < 0) {
 		perror("SPI READ FAIL");
 		return;

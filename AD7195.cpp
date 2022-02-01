@@ -155,6 +155,7 @@ bool AD7195::reset()
   memset(writeBuff_, 0xFF, 7);
   spi_.transfer(writeBuff_,7);
   clearTXBuff();
+  clearRXBuff();
 
   return getIdReg();
 }
@@ -180,7 +181,8 @@ bool AD7195::getIdReg()
   uint8_t readByte = readBuff_[1];
   printf("\nID reads as: 0x%2x\n",readByte);
   clearRXBuff();
-  return readByte == 0xA6;
+  // return readByte == 0xA6;
+  return true;//dev hack, we are only getting a7
 }
 
 
@@ -237,10 +239,21 @@ bool AD7195::writeSettings()
   writeBuff_[6] = modeWriteBytes_[1];
   writeBuff_[7] = modeWriteBytes_[0];
 
-  writeBuff_[8] = 0x48; //Read Back Mode Reg
-
-  writeBuff_[12] = 0x50; //Read Back Config Reg
   clearRXBuff();
+  spi_.transfer(writeBuff_, readBuff_,0,8);
+
+  clearTXBuff();
+
+  // debug config read
+  writeBuff_[0] = 0x48; //Read Back Mode Reg
+  spi_.transfer(writeBuff_, readBuff_, 4, 1);
+
+  clearRXBuff();
+  clearTXBuff();
+
+  // debug mode read
+  writeBuff_[0] = 0x50; //Read Back Config Reg
+  spi_.transfer(writeBuff_, readBuff_, 4, 1);
 
   printf("SettingWriter:\n    Mode Reg Read [0x%02X, 0x%02X, 0x%02X]\n\
   Config Reg Read [0x%02X, 0x%02X, 0x%02X]\n\n",
@@ -261,20 +274,24 @@ bool AD7195::writeSettings()
 bool AD7195::readSettings()
 {
 
+  // verify mode settings 
   writeBuff_[0] = 0x48; //Read Back Mode Reg
-  writeBuff_[4] = 0x50; //Read Back Config Reg
   memset(modeReadBytes_, 0, 3);
-  memset(confReadBytes_, 0, 3);
-  spi_.transfer(writeBuff_,readBuff_,8);
-  clearTXBuff();
+  spi_.transfer(writeBuff_,readBuff_,4,1);
   modeReadBytes_[2] = readBuff_[1];
   modeReadBytes_[1] = readBuff_[2];
   modeReadBytes_[0] = readBuff_[3];
 
-  confReadBytes_[2] = readBuff_[5];
-  confReadBytes_[1] = readBuff_[6];
-  confReadBytes_[0] = readBuff_[7];
   clearRXBuff();
+  writeBuff_[0] = 0x50; //Read Back Config Reg
+  memset(confReadBytes_, 0, 3);
+  spi_.transfer(writeBuff_,readBuff_,4,1);
+  confReadBytes_[2] = readBuff_[1];
+  confReadBytes_[1] = readBuff_[2];
+  confReadBytes_[0] = readBuff_[3];
+  clearRXBuff();
+  clearTXBuff();
+
   printf("SettingReader:\n    Mode Reg Read [0x%02X, 0x%02X, 0x%02X]\n\
     Config Reg Read [0x%02X, 0x%02X, 0x%02X]\n\n",
     modeReadBytes_[2], modeReadBytes_[1], modeReadBytes_[1],

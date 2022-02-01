@@ -80,13 +80,15 @@ void LoadCellManager::LoadCellManagerWorkThread(){
 				channelRead_[1] = false;
 				if(taring_.load() == true)
 				{
-					taringAdd(lcVals_[0] + lcVals_[1]);
+					// taringAdd(lcVals_[0] + lcVals_[1]);
+					taringAdd(lcVals_[0]);
 					//printf("Poll Loop Tare\n");
 				}
 				else
 				{	
 					//printf("Poll Loop\n");
-					load_.store(lcVals_[0] + lcVals_[1] - tareVal_.load());
+					// load_.store(lcVals_[0] + lcVals_[1] - tareVal_.load());
+					load_.store(lcVals_[0] - tareVal_.load());
 					data_new.store(true);
 				}
 			}

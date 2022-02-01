@@ -21,7 +21,7 @@ class SPI {
 	public:
 		SPI();
 		// ~SPI();
-		void transfer(uint8_t * txBuff, uint8_t * rxBuff, int len);
+		void transfer(uint8_t * txBuff, uint8_t * rxBuff, int len, int w_len=1);
 		void transfer(uint8_t * txBuff, int len);
 		void begin_transaction();
 		void settings(uint32_t spiMode, uint32_t clkSpeedHz = 100000);
