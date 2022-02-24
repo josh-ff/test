@@ -30,7 +30,6 @@ public:
 	bool is_taring() {return taring_.load();};
 	double getTareVal() {return tareVal_.load();};
 
-
 private:
 	AD7195& ad7195_;
 	std::atomic<double> load_;

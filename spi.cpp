@@ -11,7 +11,6 @@ SPI::SPI() {
         perror(err);
         return;
 	}
-
 }
 
 // read and write in 2 spi frames
@@ -32,7 +31,7 @@ void SPI::transfer(uint8_t * txBuff, uint8_t * rxBuff, int len, int w_len){
     }
     // printf("\n");
 	if (status < 0) {
-		perror("SPI READ FAIL");
+		printf("SPI READ FAIL");
 		return;
 	}
 }
@@ -93,11 +92,11 @@ void SPI::begin_transaction()
 void SPI::settings(uint32_t spiMode, uint32_t clkSpeedHz)
 {
 	if (ioctl(file_, SPI_IOC_WR_MODE32, &spiMode) < 0) {
-		perror("Error Setting SPI Mode");
+		printf("Error Setting SPI Mode");
 		return;
 	}	
 		if (ioctl(file_, SPI_IOC_WR_MAX_SPEED_HZ, &clkSpeedHz) < 0) {
-		perror("Error Setting SPI Clock Frequency");
+		printf("Error Setting SPI Clock Frequency");
 		return;
 	}
     //return;

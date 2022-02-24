@@ -1,6 +1,7 @@
 #include "AD7195.h"
 
-
+#include <chrono>
+#include <thread>
 
 LCState AD7195::getState()
 {
@@ -61,7 +62,7 @@ bool Sinc3, bool singleCycle, bool rej60, uint8_t clock)
   uint32_t dataRateCalcChop =  dataRateCalcNoChop/(3+(!Sinc3));
 
 
-  modeWriteBytes_[0] = (filtSpeed & 0xFF);
+  modeWriteBytes_[0] = 0x08;//(filtSpeed & 0xFF); // TODO possibly uncomment
   modeWriteBytes_[1] = ((filtSpeed & 0x300)>>8) | (singleCycle<<3) | (enParity << 5) | (Sinc3 << 7) | (rej60 <<2);
   modeWriteBytes_[2] = ((clock & 0x03)<<2) | (dataStatus << 4) | ((mode & 0x07)<<5);
 
@@ -77,11 +78,6 @@ bool Sinc3, bool singleCycle, bool rej60, uint8_t clock)
     mode, dataStatus, clock, Sinc3, enParity, singleCycle, rej60, Sinc3 ? "SINC3" : "SINC4", dataRateCalcChop, dataRateCalcNoChop);
     return 0;
 }
-
-
-
-
-
 
 int8_t AD7195::buildConfigReg(uint8_t channel, uint8_t gain, bool refDetect, bool chop,
   bool acExcite, bool enBuffer, bool burnoutCurrents, bool unipolarMeasure)
@@ -136,15 +132,22 @@ int8_t AD7195::buildConfigReg(uint8_t channel, uint8_t gain, bool refDetect, boo
 
 bool AD7195::init()
 {
-  spi_.settings(SPI_MODE_3, 500000);
+  printf("INITIALIZING CALL GUY");
+
+  spi_.settings(SPI_MODE_3, 1000000);
   clearTXBuff();
   clearRXBuff();
+
+  // printf("CALLING RESET\r\n");
+
+
   bool successRst = reset();
   if(!successRst)
   {
     errno = EIO;
-    perror("Failed To Communicate with AD7195");
+    printf("Failed To Communicate with AD7195");
   }
+
   return successRst;
 
   //writeBuff_
@@ -162,11 +165,13 @@ bool AD7195::reset()
 
 uint8_t AD7195::getStatusReg()
 {
-  writeBuff_[0] = 0x40;
-  spi_.transfer(writeBuff_,readBuff_,2);
+  writeBuff_[0] = 0xFF;
+  writeBuff_[1] = 0x40;
+  clearRXBuff();
+  spi_.transfer(writeBuff_,readBuff_,3,2);
   clearTXBuff();
-  status_ = readBuff_[1];
-  //printf("\nStatus reads as: 0x%2x\n",status_);
+  status_ = readBuff_[2];
+  // printf("\nStatus reads as: 0x%2x\n",status_);
   clearRXBuff();
   return status_;
 }
@@ -174,15 +179,14 @@ uint8_t AD7195::getStatusReg()
 
 bool AD7195::getIdReg()
 {
-  
-  writeBuff_[0] = 0x60;
-  spi_.transfer(writeBuff_,readBuff_,2);
+  writeBuff_[0] = 0xFF;
+  writeBuff_[1] = 0x60;
+  spi_.transfer(writeBuff_,readBuff_,3,2);
   clearTXBuff();
-  uint8_t readByte = readBuff_[1];
+  uint8_t readByte = readBuff_[2];
   printf("\nID reads as: 0x%2x\n",readByte);
   clearRXBuff();
-  // return readByte == 0xA6;
-  return true;//dev hack, we are only getting a7
+  return readByte == 0xA6;
 }
 
 
@@ -234,37 +238,21 @@ bool AD7195::writeSettings()
   writeBuff_[2] = confWriteBytes_[1];
   writeBuff_[3] = confWriteBytes_[0];
 
-  writeBuff_[4] = 0x08; //Write to Mode Reg
-  writeBuff_[5] = modeWriteBytes_[2];
-  writeBuff_[6] = modeWriteBytes_[1];
-  writeBuff_[7] = modeWriteBytes_[0];
-
-  clearRXBuff();
-  spi_.transfer(writeBuff_, readBuff_,0,8);
-
+  spi_.transfer(writeBuff_,4);
   clearTXBuff();
 
-  // debug config read
-  writeBuff_[0] = 0x48; //Read Back Mode Reg
-  spi_.transfer(writeBuff_, readBuff_, 4, 1);
-
-  clearRXBuff();
+  writeBuff_[0] = 0x08; //Write to Mode Reg
+  writeBuff_[1] = modeWriteBytes_[2];
+  writeBuff_[2] = modeWriteBytes_[1];
+  writeBuff_[3] = modeWriteBytes_[0];
+  
+  spi_.transfer(writeBuff_,4);
   clearTXBuff();
-
-  // debug mode read
-  writeBuff_[0] = 0x50; //Read Back Config Reg
-  spi_.transfer(writeBuff_, readBuff_, 4, 1);
 
   printf("SettingWriter:\n    Mode Reg Read [0x%02X, 0x%02X, 0x%02X]\n\
   Config Reg Read [0x%02X, 0x%02X, 0x%02X]\n\n",
-  modeWriteBytes_[2], modeWriteBytes_[1], modeWriteBytes_[1],
+  modeWriteBytes_[2], modeWriteBytes_[1], modeWriteBytes_[0],
   confWriteBytes_[2], confWriteBytes_[1], confWriteBytes_[0]);
-  spi_.transfer(writeBuff_,8);
-  clearTXBuff();
-  //modeReadBytes_[3], confReadBytes_[3];
-
-  clearRXBuff();
-
 
   //Verify everything you read back equals everything you sent out
   return (readSettings());
@@ -276,7 +264,7 @@ bool AD7195::readSettings()
 
   // verify mode settings 
   writeBuff_[0] = 0x48; //Read Back Mode Reg
-  memset(modeReadBytes_, 0, 3);
+  clearRXBuff();
   spi_.transfer(writeBuff_,readBuff_,4,1);
   modeReadBytes_[2] = readBuff_[1];
   modeReadBytes_[1] = readBuff_[2];
@@ -284,7 +272,6 @@ bool AD7195::readSettings()
 
   clearRXBuff();
   writeBuff_[0] = 0x50; //Read Back Config Reg
-  memset(confReadBytes_, 0, 3);
   spi_.transfer(writeBuff_,readBuff_,4,1);
   confReadBytes_[2] = readBuff_[1];
   confReadBytes_[1] = readBuff_[2];
@@ -294,7 +281,7 @@ bool AD7195::readSettings()
 
   printf("SettingReader:\n    Mode Reg Read [0x%02X, 0x%02X, 0x%02X]\n\
     Config Reg Read [0x%02X, 0x%02X, 0x%02X]\n\n",
-    modeReadBytes_[2], modeReadBytes_[1], modeReadBytes_[1],
+    modeReadBytes_[2], modeReadBytes_[1], modeReadBytes_[0],
     confReadBytes_[2], confReadBytes_[1], confReadBytes_[0]);
 
 
@@ -355,7 +342,7 @@ int32_t AD7195::read_raw(bool blocking)
   spi_.transfer(writeBuff_,readBuff_,5);
   clearTXBuff();
   //modeReadBytes_[3], confReadBytes_[3];
-  //printf("Data Register Read 0x%02X 0x%02X 0x%02X 0x%02X\n",readBuff_[1], readBuff_[2], readBuff_[3],readBuff_[4] );
+  printf("Data Register Read 0x%02X 0x%02X 0x%02X 0x%02X\n",readBuff_[1], readBuff_[2], readBuff_[3],readBuff_[4] );
   DataRaw_ = ((readBuff_[1]<<16) + (readBuff_[2]<<8) + readBuff_[3]) - 8388608; //Encoded from 0 = -V/Gain -> 2^24 = +v/Gain
   status_ = readBuff_[4];
   clearRXBuff();

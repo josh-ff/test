@@ -2,8 +2,6 @@
 #include <iostream>
 #include <chrono>
 
-
-
 void LoadCellManager::begin_polling() {
 	if(!thread_active)
 	{
@@ -55,7 +53,7 @@ void LoadCellManager::LoadCellManagerWorkThread(){
 		std::this_thread::sleep_for (std::chrono::microseconds(pollingtimeUs_));
 		if(!ad7195_.checkDrdySPI7195())
 		{
-			//printf("Data Not Ready\n");
+			// printf("WORKTHREAD: Data Not Ready\n");
 			std::this_thread::sleep_for (std::chrono::microseconds(pollingtimeUs_/5));
 		}
 		//If the amp has new lc data ready
@@ -72,7 +70,7 @@ void LoadCellManager::LoadCellManagerWorkThread(){
 			If both channels are read calculate total load, 
 			let system know data is ready, and reset read flags
 			*/
-			if(channelRead_[0] && channelRead_[1])
+			if(channelRead_[0])
 			{
 				
 				
@@ -81,12 +79,13 @@ void LoadCellManager::LoadCellManagerWorkThread(){
 				if(taring_.load() == true)
 				{
 					// taringAdd(lcVals_[0] + lcVals_[1]);
+					printf("Taring Regimine\r\n");
 					taringAdd(lcVals_[0]);
 					//printf("Poll Loop Tare\n");
 				}
 				else
 				{	
-					//printf("Poll Loop\n");
+					printf("Polling Regimine\n");
 					// load_.store(lcVals_[0] + lcVals_[1] - tareVal_.load());
 					load_.store(lcVals_[0] - tareVal_.load());
 					data_new.store(true);
@@ -112,9 +111,10 @@ double LoadCellManager::read(){
 	if(!running.load())
 	{
 		errno = EIO;
-		perror("Attempting Load Cell Read while load cells are disabled!");
+		printf("Attempting Load Cell Read while load cells are disabled!");
 	}
 	data_new.store(false);	// You've read the most recent data
+	printf("returning read result: %f\r\n", load_.load());
 	return(load_.load());
 }
 
@@ -122,11 +122,12 @@ bool LoadCellManager::taringAdd(double inVal)
 {
 	tareVal_.store(tareVal_.load() + inVal);
 	tareCntr_--;
-	//printf("Taring [%d] TareVal:%F\n", tareCntr_, tareVal_.load());
+	printf("Taring [%d] TareVal:%F\n", tareCntr_, tareVal_.load());
 	if(tareCntr_ == 0)
 	{
 		tareVal_.store(tareVal_.load()/tareNum_);
 		tareNum_ = 0;
+		printf("another mechanism to set this shit false\r\n");
 		taring_.store(false);
 		tared_.store(true);
 		//printf("Tare Calculated: %F\n", tareVal_.load());
@@ -163,6 +164,7 @@ bool LoadCellManager::startTare(uint16_t numCycles)
 
 void LoadCellManager:: setTareVal(double valIn)
 {
+	printf("Setting this shit false\r\n");
 	taring_.store(false);
 	tareCntr_ = 0;
 	tareNum_ = 0;

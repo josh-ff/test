@@ -28,21 +28,21 @@ int main(int argc, char * argv[]){
 	uint8_t delayTime = 2;
 	FILE* dataFile;
 	std::string fname;
-	if(argc <= 1)
-	{
-		printf("No File Name Given terminating.\n");
-	}
-	if(argc >= 3) //If a non default number of samples is given
-	{
-		numSamples = stoi(argv[2]);
-	}
-	if(argc >= 4) //If a non default sampling speed is given
-	{
-		sampleSpeed = stoi(argv[3]);
-	}
-	fname = std::string(argv[1]);
+	// if(argc <= 1)
+	// {
+	// 	printf("No File Name Given terminating.\n");
+	// }
+	// if(argc >= 3) //If a non default number of samples is given
+	// {
+	// 	numSamples = stoi(argv[2]);
+	// }
+	// if(argc >= 4) //If a non default sampling speed is given
+	// {
+	// 	sampleSpeed = stoi(argv[3]);
+	// }
+	fname = std::string("eggs.txt");
 	// dataFile.open(fname); TODO: josh make work
-	dataFile = fopen(fname.c_str(), "w");
+	dataFile = fopen(fname.c_str(), "w");	
 
 
 	printf("\r\n---Starting Test Script---\n");
@@ -52,28 +52,34 @@ int main(int argc, char * argv[]){
 	SetPin(SYNC_PIN,1, 1);	//Set CS HIGH
 
 
-	auto spi = SPI();
-	auto ad7195 = AD7195(spi, 1);
-
 	// here is where we will loop through ELCs
 	auto mux_interface = Mux_74HC137();
 
+	printf("testing channel: %d\r\n", atoi(argv[1]));
+
 	// for now we will just make it transparent to ELC Amp 0
-	mux_interface.set_addr(1);
+	mux_interface.set_addr(atoi(argv[1]));
+
+	auto spi = SPI();
+	// spi.settings(3);
+	auto ad7195 = AD7195(spi, 1);
+	ad7195.init();
+
 
 	// /* AD7195 Init Begin*/
 
 	bool elcOnline = ad7195.init();
-	printf("Initialize AD7195 %s\n",elcOnline  ? "Succeeded" : "Failed");
+	printf("Initialize AD7195 %s\n", elcOnline  ? "Succeeded" : "Failed");
 
 	 if(!elcOnline)
 	 {
 	 	return -1; // Kill program, LC's aren't talking
 	 }
 
+	ad7195.buildModeReg(0,sampleSpeed);
+	ad7195.buildConfigReg(1, 7, true, false);
+	ad7195.writeSettings();
 
-	 ad7195.buildModeReg(0,sampleSpeed);
-	 ad7195.buildConfigReg(3, 7, true, false);
 	 //printf("Writing Settings to AD7195 %s\n",ad7195.writeSettings() ? "Succeeded" : "Failed");
 	 ad7195.setConversionFactor(0.002, 20000.0);
 
@@ -84,9 +90,14 @@ int main(int argc, char * argv[]){
 	/* AD7195 Init End*/
 	loadcellmanager.begin_polling();
 	loadcellmanager.startTare();
+	int printOnce = 0;
 	while(loadcellmanager.is_taring())
 	{
-				//Block until taring is complete
+		if (!printOnce){
+			printf("In taring\r\n");
+			printOnce = 1;
+		}
+		//Block until taring is complete
 	}
 	loadcellmanager.end_polling();
 	printf("\nTare Value Set At: %F g\nDataLogging Begins in %d seconds", loadcellmanager.getTareVal(),delayTime);
@@ -102,10 +113,18 @@ int main(int argc, char * argv[]){
 
 	for(int i=0; i<(int)numSamples; i++)
 	{
+		printf("On run: %d/%d\r\n", i, numSamples);
+
+		printOnce = 0;
 		while(!loadcellmanager.is_data_ready())
-		{
-			//Block until there's new data
+		{	
+			if (!printOnce){
+				printf("In data not ready\r\n");
+				printOnce = 1;
+			}
 		}
+		printf("data now ready\r\n");
+
 		double readVal = loadcellmanager.read();
 		fprintf(dataFile, "%d, %0.2F\n", i, readVal);
 		// dataFile << i << "," << std::setprecision( 1 ) <<readVal << std::endl;

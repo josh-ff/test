@@ -24,7 +24,7 @@ class SPI {
 		void transfer(uint8_t * txBuff, uint8_t * rxBuff, int len, int w_len=1);
 		void transfer(uint8_t * txBuff, int len);
 		void begin_transaction();
-		void settings(uint32_t spiMode, uint32_t clkSpeedHz = 100000);
+		void settings(uint32_t spiMode, uint32_t clkSpeedHz = 500000);
 	private:
 		int file_;
 		struct spi_ioc_transfer xfer_[1];
@@ -34,7 +34,7 @@ class SPI {
 		const char *filename = "/dev/spidev0.0";
 
 		//Spi Settings
-		uint32_t speed;
+		uint32_t speed = 500000;
 
 };
 

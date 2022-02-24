@@ -70,8 +70,6 @@ class AD7195 {
     void incBadReads(uint8_t incVal = 1);
     void decBadReads(uint8_t decVal = 1);
     bool checkDrdySPI7195();
-
-    bool is_data_ready() {return checkDrdySPI7195();}
     
     // TODO both need to be implemented
     
@@ -81,20 +79,11 @@ class AD7195 {
 
     uint8_t getErrCntr();
 
-    int8_t buildModeReg(uint8_t mode = 0x00, uint16_t filtSpeed = 0x20, bool dataStatus = true, bool enParity = true,
+    int8_t buildModeReg(uint8_t mode, uint16_t filtSpeed, bool dataStatus = true, bool enParity = true,
     bool Sinc3 = false, bool singleCycle = false, bool rej60 = true, uint8_t clock = 0x2);
 
     int8_t buildConfigReg(uint8_t channel = 0x01, uint8_t gain = 0x00, bool refDetect = true, bool chop = false, 
       bool acExcite = false, bool enBuffer = false, bool burnoutCurrents = false, bool unipolarMeasure = false);
-
-
-    //bool setModeReg();
-
-    //void getModeReg();
-
-    //bool setConfigReg();
-
-    //void getConfigReg();
 
     uint8_t getStatusReg();
 
@@ -112,11 +101,7 @@ class AD7195 {
 
     bool readSettings();
 
-
-
     uint32_t getSamplingPeriodUs();
-
-    
 
     double setConversionFactor(double sensitivity, double fullLoad);
 
