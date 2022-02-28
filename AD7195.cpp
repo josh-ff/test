@@ -20,8 +20,11 @@ uint8_t AD7195::getErrCntr()
 
 bool AD7195::checkDrdySPI7195(){
   getStatusReg();
+  readSettings();
+  printf("Status Reg: %02X\r\n", status_);
   bool readReady = !(status_ & 0x80); 
   if (readReady) return true;
+  else writeSettings();
   return false;
 }
 
@@ -148,7 +151,7 @@ bool AD7195::init()
     printf("Failed To Communicate with AD7195");
   }
 
-  return successRst;
+  return true;
 
   //writeBuff_
 }

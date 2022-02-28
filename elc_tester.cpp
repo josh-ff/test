@@ -49,7 +49,6 @@ int main(int argc, char * argv[]){
 	// auto dio_status = DIOMaster_Setup();	
 	InitializeIO();
 	// DIOMaster_DirSet(SYNC_PIN , 1);
-	SetPin(SYNC_PIN,1, 1);	//Set CS HIGH
 
 
 	// here is where we will loop through ELCs
@@ -60,6 +59,7 @@ int main(int argc, char * argv[]){
 	// for now we will just make it transparent to ELC Amp 0
 	mux_interface.set_addr(atoi(argv[1]));
 
+	SetPin(SYNC_PIN,1, 1);	//Set CS HIGH
 	auto spi = SPI();
 	// spi.settings(3);
 	auto ad7195 = AD7195(spi, 1);
